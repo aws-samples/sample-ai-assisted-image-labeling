@@ -1,0 +1,55 @@
+[project]
+name = "sam-labeler"
+version = "0.1.0"
+description = "Local image-labeling tool with SAM 3 inference on an on-demand SageMaker endpoint"
+requires-python = ">=3.10"
+dependencies = [
+    "pillow>=12",
+    "pillow-heif>=1.3",
+    "boto3>=1.34", # SageMaker backend + endpoint lifecycle + S3 sync
+]
+# NOTE: "requests" is intentionally omitted. The SSH-tunnel backend that used it
+# is removed in this redesign (Req 1.5).
+
+[project.scripts]
+# Entry-point targets are wired up in later tasks:
+#   - labeler:main is the GUI entry (labeler.py; adjusted in tasks 8/9).
+#   - endpoint_ctl:start / endpoint_ctl:stop are added in task 5.
+# They are only declared here as specified; the target functions do not all
+# exist yet.
+labeler = "labeler:main"
+start-sam-endpoint = "endpoint_ctl:start"
+stop-sam-endpoint = "endpoint_ctl:stop"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# The modules live flat in the repo root (labeler.py, endpoint_ctl.py,
+# sam_client.py, annotations.py, and the future endpoint_manager.py /
+# input_source.py) rather than under a package directory. Tell hatchling to
+# treat the top-level .py files as the wheel contents so `uv lock` / build
+# succeed for this flat single-directory layout.
+[tool.hatch.build.targets.wheel]
+include = [
+    "labeler.py",
+    "endpoint_ctl.py",
+    "sam_client.py",
+    "annotations.py",
+    "endpoint_manager.py",
+    "input_source.py",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "*.py",
+    "README.md",
+]
+
+# Bandit native config. Silences the B101 (assert_used) noise: pytest test
+# bodies legitimately use bare `assert`. ASH's bandit plugin respects this
+# native config. Only test directories and virtualenv/build artifacts are
+# excluded here; the real source modules (labeler.py, endpoint_manager.py,
+# input_source.py, sam_client.py, sam_server/*.py, cdk app) are still scanned.
+[tool.bandit]
+exclude_dirs = ["tests", "cdk/tests", ".venv", "cdk/.venv", "cdk/cdk.out"]

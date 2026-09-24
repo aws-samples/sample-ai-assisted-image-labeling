@@ -51,7 +51,7 @@ SamLabelerStack(
         account=os.environ.get("CDK_DEFAULT_ACCOUNT"),
         region=os.environ.get("CDK_DEFAULT_REGION"),
     ),
-    description="SAM auto-labeling inference endpoint (on-demand)",
+    description="SAM auto-labeling inference endpoint (on-demand) (SO0361)",
 )
 
 app.synth()
